@@ -46,6 +46,9 @@ on:
         type: string
         default: ""
 
+permissions:
+  contents: read
+
 jobs:
   ste:
     name: Simplified Technical English
@@ -55,10 +58,17 @@ jobs:
         with:
           ref: ${{ inputs.checkout-ref }}
           persist-credentials: false
+          # Full history: the advisory per-PR report diffs the branch against
+          # its base (origin/<base-ref>). A shallow checkout has no base to
+          # diff against, and the report would degrade to whole-repo noise.
+          fetch-depth: 0
 
-      - uses: tuna-os/.github/.github/actions/ste-lint@main
+      - uses: tuna-os/.github/.github/actions/ste-lint@da0153d94472c0e645f69820b3bae57487be3c43
         with:
           budget-file: ${{ inputs.budget-file }}
           budget: ${{ inputs.budget }}
           node-version: ${{ inputs.node-version }}
           run-tests: ${{ inputs.run-tests }}
+          # github.base_ref is set on pull_request events and empty otherwise;
+          # empty disables the advisory report and leaves the budget gate.
+          base-ref: ${{ github.base_ref }}
